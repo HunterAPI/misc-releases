@@ -1,52 +1,59 @@
-local function toDictionary(...)
+local function Dictionary(...)
 	local t = {}
 	for _, v in ipairs({...}) do
 		t[v] = true
 	end
 	return t
 end
-local lettersL = toDictionary("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
-local lettersU = toDictionary("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
-local lettersH = toDictionary("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "E", "e", "F", "f")
-local numbers = toDictionary("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
-local operators = toDictionary("+", "-", "*", "/", "^", "%", ",", "{", "}", "[", "]", "(", ")", ";", "#")
-local operatorsLuau, _ = toDictionary("+", "-", "*", "/", "%", "^", ".."), "Pepsi was here"
-local keywords = toDictionary("and", "break", "continue", "do", "else", "elseif", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while")
-local localCount = 0
-local getNewLocal = (function()
+local LowerLetters = Dictionary("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
+local UpperLetters = Dictionary("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
+local HexLetters = Dictionary("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "E", "e", "F", "f")
+local Numbers = Dictionary("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+local Operators = Dictionary("+", "-", "*", "/", "^", "%", ",", "{", "}", "[", "]", "(", ")", ";", "#")
+local OperatorsU = Dictionary("+", "-", "*", "/", "%", "^", ".."), "Pepsi was here"
+local Keywords = Dictionary("and", "break", "continue", "do", "else", "elseif", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while")
+local Locals = 0
+local GenerateLocal = (function()
 	local a, b = {}, {}
-	for i = 97, 122 do
-		i = string.char(i)
-		a[#a + 1], b[#b + 1] = i, i
+	for d = 97, 122 do
+		d = string.char(d)
+		a[#a + 1], b[#b + 1] = d, d
 	end
-	for i = 65, 90 do
-		i = string.char(i)
-		a[#a + 1], b[#b + 1] = i, i
+	for e = 65, 90 do
+		e = string.char(e)
+		a[#a + 1], b[#b + 1] = e, e
 	end
-	for i = 0, 9 do
-		a[#a + 1] = i
+	for f = 0, 9 do
+		a[#a + 1] = f
 	end
 	a[#a + 1] = "_"
-	local function c(d)
-		local e = ""
-		local f = d % #b
-		d = (d - f) / #b
-		e = e .. b[f + 1]
-		while d > 0 do
-			local f = d % #a
-			d = (d - f) / #a
-			e = e .. a[f + 1]
+	local function c(g)
+		local h = ""
+		local i = g % #b
+		g = (g - i) / #b
+		h = h .. b[i + 1]
+		while g > 0 do
+			local i = g % #a
+			g = (g - i) / #a
+			h = h .. a[i + 1]
 		end
-		return e
+		return h
 	end
-	return function()
-		local g = ""
+	return function(tab)
+		local j = ""
 		repeat
-			local h = localCount
-			localCount = localCount + 1
-			g = c(h)
-		until not keywords[g]
-		return g
+			local k = Locals
+			Locals = Locals + 1
+			j = c(k)
+		until not Keywords[j] or (function()
+			for _, v in ipairs(tab) do
+				if j == v.Name then
+					return false
+				end
+			end
+			return true
+		end)()
+		return j
 	end
 end)()
 local Scope = {
@@ -55,8 +62,8 @@ local Scope = {
 			Parent = b,
 			Locals = {},
 			Globals = {},
-			oldLocalNamesMap = {},
-			oldGlobalNamesMap = {},
+			OldLocalNamesMap = {},
+			OldGlobalNamesMap = {},
 			Children = {}
 		}
 		if b then
@@ -66,15 +73,14 @@ local Scope = {
 			__index = a
 		})
 	end,
-	AddLocal = function(e, d)
-		e.Locals[#e.Locals + 1] = d
+	AddLocal = function(d, e)
+		d.Locals[#d.Locals + 1] = e
 	end,
 	AddGlobal = function(f, g)
 		f.Globals[#f.Globals + 1] = g
 	end,
 	CreateLocal = function(h, i)
-		local j
-		j = h:GetLocal(i)
+		local j = h:GetLocal(i)
 		if j then
 			return j
 		end
@@ -98,22 +104,22 @@ local Scope = {
 		end
 	end,
 	GetOldLocal = function(n, o)
-		if n.oldLocalNamesMap[o] then
-			return n.oldLocalNamesMap[o]
+		if n.OldLocalNamesMap[o] then
+			return n.OldLocalNamesMap[o]
 		end
 		return n:GetLocal(o)
 	end,
-	mapLocal = function(p, q, r)
-		p.oldLocalNamesMap[q] = r
+	MapLocal = function(p, q, r)
+		p.OldLocalNamesMap[q] = r
 	end,
 	GetOldGlobal = function(s, t)
-		if s.oldGlobalNamesMap[t] then
-			return s.oldGlobalNamesMap[t]
+		if s.OldGlobalNamesMap[t] then
+			return s.OldGlobalNamesMap[t]
 		end
 		return s:GetGlobal(t)
 	end,
-	mapGlobal = function(u, v, w)
-		u.oldGlobalNamesMap[v] = w
+	MapGlobal = function(u, v, w)
+		u.OldGlobalNamesMap[v] = w
 	end,
 	GetOldVariable = function(x, y)
 		return x:GetOldLocal(y) or x:GetOldGlobal(y)
@@ -124,7 +130,7 @@ local Scope = {
 		local D = z:GetLocal(A)
 		if D then
 			D.Name = B
-			z:mapLocal(A, D)
+			z:MapLocal(A, D)
 			C = true
 		end
 		if not C and z.Parent then
@@ -137,7 +143,7 @@ local Scope = {
 		local I = E:GetGlobal(F)
 		if I then
 			I.Name = G
-			E:mapGlobal(F, I)
+			E:MapGlobal(F, I)
 			H = true
 		end
 		if not H and E.Parent then
@@ -153,17 +159,17 @@ local Scope = {
 		end
 	end,
 	GetAllVariables = function(M)
-		local N = M:getVars(true)
-		for _, O in ipairs(M:getVars(false)) do
+		local N = M:GetVars(true)
+		for _, O in ipairs(M:GetVars(false)) do
 			N[#N + 1] = O
 		end
 		return N
 	end,
-	getVars = function(P, Q)
+	GetVars = function(P, Q)
 		local R = {}
 		if Q then
 			for _, S in ipairs(P.Children) do
-				for _, T in ipairs(S:getVars(true)) do
+				for _, T in ipairs(S:GetVars(true)) do
 					R[#R + 1] = T
 				end
 			end
@@ -175,7 +181,7 @@ local Scope = {
 				R[#R + 1] = V
 			end
 			if P.Parent then
-				for _, W in ipairs(P.Parent:getVars(false)) do
+				for _, W in ipairs(P.Parent:GetVars(false)) do
 					R[#R + 1] = W
 				end
 			end
@@ -244,16 +250,14 @@ local Scope = {
 	end,
 	MinifyVariables = function(qb)
 		for _, rb in ipairs(qb.Locals) do
-			qb:RenameLocal(rb.Name, (rb.References <= 1 and "_") or getNewLocal())
+			qb:RenameLocal(rb.Name, (rb.References <= 1 and "_") or GenerateLocal(qb.Locals))
 		end
 	end
 }
-local function LL(a)
+local function Tokenize(a)
 	local b = {}
 	local c, d = pcall(function()
-		local h = 1
-		local i = 1
-		local j = 1
+		local h, i, j = 1, 1, 1
 		local function k()
 			local p = a:sub(h, h)
 			if p == "\n" then
@@ -445,14 +449,14 @@ local function LL(a)
 				L = {
 					Type = "Eof"
 				}
-			elseif lettersU[K] or lettersL[K] or K == "_" then
+			elseif UpperLetters[K] or LowerLetters[K] or K == "_" then
 				local T = h
 				repeat
 					k()
 					K = l()
-				until not (lettersU[K] or lettersL[K] or numbers[K] or K == "_")
+				until not (UpperLetters[K] or LowerLetters[K] or Numbers[K] or K == "_")
 				local U = a:sub(T, h - 1)
-				if keywords[U] then
+				if Keywords[U] then
 					L = {
 						Type = "Keyword",
 						Data = U
@@ -463,32 +467,32 @@ local function LL(a)
 						Data = U
 					}
 				end
-			elseif numbers[K] or l() == "." and numbers[l(1)] then
+			elseif Numbers[K] or l() == "." and Numbers[l(1)] then
 				local V = h
 				if K == "0" and l(1):lower() == "x" then
 					k()
 					k()
-					while lettersH[l()] do
+					while HexLetters[l()] do
 						k()
 					end
 					if m("Pp") then
 						m("+-")
-						while numbers[l()] do
+						while Numbers[l()] do
 							k()
 						end
 					end
 				else
-					while numbers[l()] do
+					while Numbers[l()] do
 						k()
 					end
 					if m(".") then
-						while numbers[l()] do
+						while Numbers[l()] do
 							k()
 						end
 					end
 					if m("Ee") then
 						m("+-")
-						while numbers[l()] do
+						while Numbers[l()] do
 							k()
 						end
 					end
@@ -585,7 +589,7 @@ local function LL(a)
 						Data = ":"
 					}
 				end
-			elseif operators[K] then
+			elseif Operators[K] then
 				k()
 				L = {
 					Type = "Symbol",
@@ -695,78 +699,78 @@ local function LL(a)
 	end
 	return true, e
 end
-local function ParseLua(a)
+local function Parse(a)
 	local b, c
 	if type(a) ~= "table" then
-		b, c = LL(a)
+		b, c = Tokenize(a)
 	else
 		b, c = true, a
 	end
 	if not b then
 		return false, c
 	end
-	local function d(v)
-		local w = ">> :" .. c:Peek().Line .. ":" .. c:Peek().Char .. ": " .. v .. "\n"
-		local x = 0
+	local function d(t)
+		local u = ">> :" .. c:Peek().Line .. ":" .. c:Peek().Char .. ": " .. t .. "\n"
+		local v = 0
 		if type(a) == "string" then
-			for y in a:gmatch("[^\n]*\n?") do
-				if y:sub(-1, -1) == "\n" then
-					y = y:sub(1, -2)
+			for w in a:gmatch("[^\n]*\n?") do
+				if w:sub(-1, -1) == "\n" then
+					w = w:sub(1, -2)
 				end
-				x = x + 1
-				if x == c:Peek().Line then
-					w = w .. ">> `" .. y:gsub("\t", "\t") .. "`\n"
-					for z = 1, c:Peek().Char do
-						local A = y:sub(z, z)
-						if A == "\t" then
-							w = w .. "\t"
+				v = v + 1
+				if v == c:Peek().Line then
+					u = u .. ">> `" .. w:gsub("\t", "\t") .. "`\n"
+					for x = 1, c:Peek().Char do
+						local y = w:sub(x, x)
+						if y == "\t" then
+							u = u .. "\t"
 						else
-							w = w .. " "
+							u = u .. " "
 						end
 					end
-					w = w .. "   ^^^^"
+					u = u .. "   ^^^^"
 					break
 				end
 			end
 		end
-		return w
+		return u
 	end
-	local e = 0
-	local f = {"_", "a", "b", "c", "d"}
-	local function g(B)
-		local C = Scope:new(B)
-		C.RenameVars = C.ObfuscateLocals
-		C.ObfuscateVariables = C.ObfuscateLocals
-		C.MinifyVars = C.MinifyVariables
-		C.Print = function()
+	local _ = 0
+	local _ = {"_", "a", "b", "c", "d"}
+	local function e(z)
+		local A = Scope:new(z)
+		A.RenameVars = A.ObfuscateLocals
+		A.ObfuscateVariables = A.ObfuscateLocals
+		A.MinifyVars = A.MinifyVariables
+		A.Print = function()
 			return "<Scope>"
 		end
-		return C
+		return A
 	end
-	local h
-	local i
-	local j, k, l, m
-	local function n(D, E)
-		local F = g(D)
-		if not c:ConsumeSymbol("(", E) then
+	local f
+	local g
+	local h, i, j, k
+	local function l(B, C)
+		local D = e(B)
+		if not c:ConsumeSymbol("(", C) then
 			return false, d("`(` expected.")
 		end
-		local G = {}
-		local H = false
-		while not c:ConsumeSymbol(")", E) do
+		local E = {}
+		local F = false
+		while not c:ConsumeSymbol(")", C) do
 			if c:Is("Ident") then
-				local K = F:CreateLocal(c:Get(E).Data)
-				G[#G + 1] = K
-				if not c:ConsumeSymbol(",", E) then
-					if c:ConsumeSymbol(")", E) then
+				local I = D:CreateLocal(c:Get(C).Data)
+				E[#E + 1] = I
+				if not c:ConsumeSymbol(",", C) then
+					if c:ConsumeSymbol(")", C) then
 						break
 					else
 						return false, d("`)` expected.")
 					end
 				end
-			elseif c:ConsumeSymbol("...", E) then
-				H = true
-				if not c:ConsumeSymbol(")", E) then
+			elseif c:ConsumeSymbol("...", C) then
+				F = true
+				if not c:ConsumeSymbol(")", C) then
 					return false, d("`...` must be the last argument of a function.")
 				end
 				break
@@ -774,262 +778,266 @@ local function ParseLua(a)
 				return false, d("Argument name or `...` expected")
 			end
 		end
-		local b, I = i(F)
+		local b, G = g(D)
 		if not b then
-			return false, I
+			return false, G
 		end
-		if not c:ConsumeKeyword("end", E) then
+		if not c:ConsumeKeyword("end", C) then
 			return false, d("`end` expected after function body")
 		end
-		local J = {}
-		J.AstType = "Function"
-		J.Scope = F
-		J.Arguments = G
-		J.Body = I
-		J.VarArg = H
-		J.Tokens = E
-		return true, J
+		local H = {}
+		H.AstType = "Function"
+		H.Scope = D
+		H.Arguments = E
+		H.Body = G
+		H.VarArg = F
+		H.Tokens = C
+		return true, H
 	end
-	function l(L)
-		local M = {}
-		if c:ConsumeSymbol("(", M) then
-			local b, N = h(L)
+	function j(J)
+		local K = {}
+		if c:ConsumeSymbol("(", K) then
+			local b, L = f(J)
 			if not b then
-				return false, N
+				return false, L
 			end
-			if not c:ConsumeSymbol(")", M) then
+			if not c:ConsumeSymbol(")", K) then
 				return false, d("`)` Expected.")
 			end
 			if false then
-				N.ParenCount = (N.ParenCount or 0) + 1
-				return true, N
+				L.ParenCount = (L.ParenCount or 0) + 1
+				return true, L
 			else
-				local O = {}
-				O.AstType = "Parentheses"
-				O.Inner = N
-				O.Tokens = M
-				return true, O
+				local M = {}
+				M.AstType = "Parentheses"
+				M.Inner = L
+				M.Tokens = K
+				return true, M
 			end
 		elseif c:Is("Ident") then
-			local P = c:Get(M)
-			local Q = L:GetLocal(P.Data)
-			if not Q then
-				Q = L:GetGlobal(P.Data)
-				if not Q then
-					Q = L:CreateGlobal(P.Data)
+			local N = c:Get(K)
+			local O = J:GetLocal(N.Data)
+			if not O then
+				O = J:GetGlobal(N.Data)
+				if not O then
+					O = J:CreateGlobal(N.Data)
 				else
-					Q.References = Q.References + 1
+					O.References = O.References + 1
 				end
 			else
-				Q.References = Q.References + 1
+				O.References = O.References + 1
 			end
-			local R = {}
-			R.AstType = "VarExpr"
-			R.Name = P.Data
-			R.Variable = Q
-			R.Tokens = M
-			return true, R
+			local P = {}
+			P.AstType = "VarExpr"
+			P.Name = N.Data
+			P.Variable = O
+			P.Tokens = K
+			return true, P
 		else
 			return false, d("primary expression expected")
 		end
 	end
-	function m(S, T)
-		local b, U = l(S)
+	function k(Q, R)
+		local b, S = j(Q)
 		if not b then
-			return false, U
+			return false, S
 		end
 		while true do
-			local V = {}
+			local T = {}
 			if c:IsSymbol(".") or c:IsSymbol(":") then
-				local W = c:Get(V).Data
+				local U = c:Get(T).Data
 				if not c:Is("Ident") then
 					return false, d("<Ident> expected.")
 				end
-				local X = c:Get(V)
-				local Y = {}
-				Y.AstType = "MemberExpr"
-				Y.Base = U
-				Y.Indexer = W
-				Y.Ident = X
-				Y.Tokens = V
-				U = Y
-			elseif not T and c:ConsumeSymbol("[", V) then
-				local b, Z = h(S)
+				local V = c:Get(T)
+				local W = {}
+				W.AstType = "MemberExpr"
+				W.Base = S
+				W.Indexer = U
+				W.Ident = V
+				W.Tokens = T
+				S = W
+			elseif not R and c:ConsumeSymbol("[", T) then
+				local b, X = f(Q)
 				if not b then
-					return false, Z
+					return false, X
 				end
-				if not c:ConsumeSymbol("]", V) then
+				if not c:ConsumeSymbol("]", T) then
 					return false, d("`]` expected.")
 				end
-				local ab = {}
-				ab.AstType = "IndexExpr"
-				ab.Base = U
-				ab.Index = Z
-				ab.Tokens = V
-				U = ab
-			elseif not T and c:ConsumeSymbol("(", V) then
-				local bb = {}
-				while not c:ConsumeSymbol(")", V) do
-					local b, db = h(S)
+				local Y = {}
+				Y.AstType = "IndexExpr"
+				Y.Base = S
+				Y.Index = X
+				Y.Tokens = T
+				S = Y
+			elseif not R and c:ConsumeSymbol("(", T) then
+				local Z = {}
+				while not c:ConsumeSymbol(")", T) do
+					local b, bb = f(Q)
 					if not b then
-						return false, db
+						return false, bb
 					end
-					bb[#bb + 1] = db
-					if not c:ConsumeSymbol(",", V) then
-						if c:ConsumeSymbol(")", V) then
+					Z[#Z + 1] = bb
+					if not c:ConsumeSymbol(",", T) then
+						if c:ConsumeSymbol(")", T) then
 							break
 						else
 							return false, d("`)` Expected.")
 						end
 					end
 				end
+				local ab = {}
+				ab.AstType = "CallExpr"
+				ab.Base = S
+				ab.Arguments = Z
+				ab.Tokens = T
+				S = ab
+			elseif not R and c:Is("string") then
 				local cb = {}
-				cb.AstType = "CallExpr"
-				cb.Base = U
-				cb.Arguments = bb
-				cb.Tokens = V
-				U = cb
-			elseif not T and c:Is("string") then
-				local eb = {}
-				eb.AstType = "StringCallExpr"
-				eb.Base = U
-				eb.Arguments = {c:Get(V)}
-				eb.Tokens = V
-				U = eb
-			elseif not T and c:IsSymbol("{") then
-				local b, fb = j(S)
+				cb.AstType = "StringCallExpr"
+				cb.Base = S
+				cb.Arguments = {c:Get(T)}
+				cb.Tokens = T
+				S = cb
+			elseif not R and c:IsSymbol("{") then
+				local b, db = h(Q)
 				if not b then
-					return false, fb
+					return false, db
 				end
-				local gb = {}
-				gb.AstType = "TableCallExpr"
-				gb.Base = U
-				gb.Arguments = {fb}
-				gb.Tokens = V
-				U = gb
+				local eb = {}
+				eb.AstType = "TableCallExpr"
+				eb.Base = S
+				eb.Arguments = {db}
+				eb.Tokens = T
+				S = eb
 			else
 				break
 			end
 		end
-		return true, U
+		return true, S
 	end
-	function j(hb)
-		local ib = {}
+	function h(fb)
+		local gb = {}
 		if c:Is("Number") then
-			local jb = {}
-			jb.AstType = "NumberExpr"
-			jb.Value = c:Get(ib)
-			jb.Tokens = ib
-			return true, jb
+			local hb = {}
+			hb.AstType = "NumberExpr"
+			hb.Value = c:Get(gb)
+			hb.Tokens = gb
+			return true, hb
 		elseif c:Is("string") then
-			local kb = {}
-			kb.AstType = "StringExpr"
-			kb.Value = c:Get(ib)
-			kb.Tokens = ib
-			return true, kb
-		elseif c:ConsumeKeyword("nil", ib) then
-			local lb = {}
-			lb.AstType = "NilExpr"
-			lb.Tokens = ib
-			return true, lb
+			local ib = {}
+			ib.AstType = "StringExpr"
+			ib.Value = c:Get(gb)
+			ib.Tokens = gb
+			return true, ib
+		elseif c:ConsumeKeyword("nil", gb) then
+			local jb = {}
+			jb.AstType = "NilExpr"
+			jb.Tokens = gb
+			return true, jb
 		elseif c:IsKeyword("false") or c:IsKeyword("true") then
+			local kb = {}
+			kb.AstType = "BooleanExpr"
+			kb.Value = c:Get(gb).Data == "true"
+			kb.Tokens = gb
+			return true, kb
+		elseif c:ConsumeSymbol("...", gb) then
+			local lb = {}
+			lb.AstType = "DotsExpr"
+			lb.Tokens = gb
+			return true, lb
+		elseif c:ConsumeSymbol("{", gb) then
 			local mb = {}
-			mb.AstType = "BooleanExpr"
-			mb.Value = c:Get(ib).Data == "true"
-			mb.Tokens = ib
-			return true, mb
-		elseif c:ConsumeSymbol("...", ib) then
-			local nb = {}
-			nb.AstType = "DotsExpr"
-			nb.Tokens = ib
-			return true, nb
-		elseif c:ConsumeSymbol("{", ib) then
-			local ob = {}
-			ob.AstType = "ConstructorExpr"
-			ob.EntryList = {}
+			mb.AstType = "ConstructorExpr"
+			mb.EntryList = {}
 			while true do
-				if c:IsSymbol("[", ib) then
-					c:Get(ib)
-					local b, pb = h(hb)
+				if c:IsSymbol("[", gb) then
+					c:Get(gb)
+					local b, nb = f(fb)
 					if not b then
 						return false, d("Key Expression Expected")
 					end
-					if not c:ConsumeSymbol("]", ib) then
+					if not c:ConsumeSymbol("]", gb) then
 						return false, d("`]` Expected")
 					end
-					if not c:ConsumeSymbol("=", ib) then
+					if not c:ConsumeSymbol("=", gb) then
 						return false, d("`=` Expected")
 					end
-					local b, qb = h(hb)
+					local b, ob = f(fb)
 					if not b then
 						return false, d("Value Expression Expected")
 					end
-					ob.EntryList[#ob.EntryList + 1] = {
+					mb.EntryList[#mb.EntryList + 1] = {
 						Type = "Key",
-						Key = pb,
-						Value = qb
+						Key = nb,
+						Value = ob
 					}
 				elseif c:Is("Ident") then
-					local rb = c:Peek(1)
-					if rb.Type == "Symbol" and rb.Data == "=" then
-						local sb = c:Get(ib)
-						if not c:ConsumeSymbol("=", ib) then
+					local pb = c:Peek(1)
+					if pb.Type == "Symbol" and pb.Data == "=" then
+						local qb = c:Get(gb)
+						if not c:ConsumeSymbol("=", gb) then
 							return false, d("`=` Expected")
 						end
-						local b, tb = h(hb)
+						local b, rb = f(fb)
 						if not b then
 							return false, d("Value Expression Expected")
 						end
-						ob.EntryList[#ob.EntryList + 1] = {
+						mb.EntryList[#mb.EntryList + 1] = {
 							Type = "KeyString",
-							Key = sb.Data,
-							Value = tb
+							Key = qb.Data,
+							Value = rb
 						}
 					else
-						local b, ub = h(hb)
+						local b, sb = f(fb)
 						if not b then
 							return false, d("Value Exected")
 						end
-						ob.EntryList[#ob.EntryList + 1] = {
+						mb.EntryList[#mb.EntryList + 1] = {
 							Type = "Value",
-							Value = ub
+							Value = sb
 						}
 					end
-				elseif c:ConsumeSymbol("}", ib) then
+				elseif c:ConsumeSymbol("}", gb) then
 					break
 				else
-					local b, vb = h(hb)
-					ob.EntryList[#ob.EntryList + 1] = {
+					local b, tb = f(fb)
+					mb.EntryList[#mb.EntryList + 1] = {
 						Type = "Value",
-						Value = vb
+						Value = tb
 					}
 					if not b then
 						return false, d("Value Expected")
 					end
 				end
-				if c:ConsumeSymbol(";", ib) or c:ConsumeSymbol(",", ib) then
-				elseif c:ConsumeSymbol("}", ib) then
+				if c:ConsumeSymbol(";", gb) or c:ConsumeSymbol(",", gb) then
+				elseif c:ConsumeSymbol("}", gb) then
 					break
 				else
 					return false, d("`}` or table entry Expected")
 				end
 			end
-			ob.Tokens = ib
-			return true, ob
-		elseif c:ConsumeKeyword("function", ib) then
-			local b, wb = n(hb, ib)
+			mb.Tokens = gb
+			return true, mb
+		elseif c:ConsumeKeyword("function", gb) then
+			local b, ub = l(fb, gb)
 			if not b then
-				return false, wb
+				return false, ub
 			end
-			wb.IsLocal = true
-			return true, wb
+			ub.IsLocal = true
+			return true, ub
 		else
-			return m(hb)
+			return k(fb)
 		end
 	end
-	local o = toDictionary("-", "not", "#")
-	local p = 8
-	local q = {
+	local m = {
+		["-"] = true,
+		["not"] = true,
+		["#"] = true
+	}
+	local n = 8
+	local o = {
 		["+"] = {6, 6},
 		["-"] = {6, 6},
 		["%"] = {7, 7},
@@ -1046,476 +1054,455 @@ local function ParseLua(a)
 		["and"] = {2, 2},
 		["or"] = {1, 1}
 	}
-	function k(xb, yb)
-		local b, zb
-		if o[c:Peek().Data] then
-			local Ab = {}
-			local Bb = c:Get(Ab).Data
-			b, zb = k(xb, p)
+	function i(vb, wb)
+		local b, xb
+		if m[c:Peek().Data] then
+			local yb = {}
+			local zb = c:Get(yb).Data
+			b, xb = i(vb, n)
 			if not b then
-				return false, zb
+				return false, xb
 			end
-			local Cb = {}
-			Cb.AstType = "UnopExpr"
-			Cb.Rhs = zb
-			Cb.Op = Bb
-			Cb.OperatorPrecedence = p
-			Cb.Tokens = Ab
-			zb = Cb
+			local Ab = {}
+			Ab.AstType = "UnopExpr"
+			Ab.Rhs = xb
+			Ab.Op = zb
+			Ab.OperatorPrecedence = n
+			Ab.Tokens = yb
+			xb = Ab
 		else
-			b, zb = j(xb)
+			b, xb = h(vb)
 			if not b then
-				return false, zb
+				return false, xb
 			end
 		end
 		while true do
-			local Db = q[c:Peek().Data]
-			if Db and Db[1] > yb then
-				local Eb = {}
-				local Fb = c:Get(Eb).Data
-				local b, Gb = k(xb, Db[2])
+			local Bb = o[c:Peek().Data]
+			if Bb and Bb[1] > wb then
+				local Cb = {}
+				local Db = c:Get(Cb).Data
+				local b, Eb = i(vb, Bb[2])
 				if not b then
-					return false, Gb
+					return false, Eb
 				end
-				local Hb = {}
-				Hb.AstType = "BinopExpr"
-				Hb.Lhs = zb
-				Hb.Op = Fb
-				Hb.OperatorPrecedence = Db[1]
-				Hb.Rhs = Gb
-				Hb.Tokens = Eb
-				zb = Hb
+				local Fb = {}
+				Fb.AstType = "BinopExpr"
+				Fb.Lhs = xb
+				Fb.Op = Db
+				Fb.OperatorPrecedence = Bb[1]
+				Fb.Rhs = Eb
+				Fb.Tokens = Cb
+				xb = Fb
 			else
 				break
 			end
 		end
-		return true, zb
+		return true, xb
 	end
-	h = function(Ib)
-		return k(Ib, 0)
+	f = function(Gb)
+		return i(Gb, 0)
 	end
-	local function r(Jb)
-		local Kb = nil
-		local Lb = {}
-		if c:ConsumeKeyword("if", Lb) then
-			local Mb = {}
-			Mb.AstType = "IfStatement"
-			Mb.Clauses = {}
+	local function p(Hb)
+		local Ib = nil
+		local Jb = {}
+		if c:ConsumeKeyword("if", Jb) then
+			local Kb = {}
+			Kb.AstType = "IfStatement"
+			Kb.Clauses = {}
 			repeat
-				local b, Nb = h(Jb)
+				local b, Lb = f(Hb)
+				if not b then
+					return false, Lb
+				end
+				if not c:ConsumeKeyword("then", Jb) then
+					return false, d("`then` expected.")
+				end
+				local b, Mb = g(Hb)
+				if not b then
+					return false, Mb
+				end
+				Kb.Clauses[#Kb.Clauses + 1] = {
+					Condition = Lb,
+					Body = Mb
+				}
+			until not c:ConsumeKeyword("elseif", Jb)
+			if c:ConsumeKeyword("else", Jb) then
+				local b, Nb = g(Hb)
 				if not b then
 					return false, Nb
 				end
-				if not c:ConsumeKeyword("then", Lb) then
-					return false, d("`then` expected.")
-				end
-				local b, Ob = i(Jb)
-				if not b then
-					return false, Ob
-				end
-				Mb.Clauses[#Mb.Clauses + 1] = {
-					Condition = Nb,
-					Body = Ob
-				}
-			until not c:ConsumeKeyword("elseif", Lb)
-			if c:ConsumeKeyword("else", Lb) then
-				local b, Pb = i(Jb)
-				if not b then
-					return false, Pb
-				end
-				Mb.Clauses[#Mb.Clauses + 1] = {
-					Body = Pb
+				Kb.Clauses[#Kb.Clauses + 1] = {
+					Body = Nb
 				}
 			end
-			if not c:ConsumeKeyword("end", Lb) then
+			if not c:ConsumeKeyword("end", Jb) then
 				return false, d("`end` expected.")
 			end
-			Mb.Tokens = Lb
-			Kb = Mb
-		elseif c:ConsumeKeyword("while", Lb) then
-			local Qb = {}
-			Qb.AstType = "WhileStatement"
-			local b, Rb = h(Jb)
+			Kb.Tokens = Jb
+			Ib = Kb
+		elseif c:ConsumeKeyword("while", Jb) then
+			local Ob = {}
+			Ob.AstType = "WhileStatement"
+			local b, Pb = f(Hb)
+			if not b then
+				return false, Pb
+			end
+			if not c:ConsumeKeyword("do", Jb) then
+				return false, d("`do` expected.")
+			end
+			local b, Qb = g(Hb)
+			if not b then
+				return false, Qb
+			end
+			if not c:ConsumeKeyword("end", Jb) then
+				return false, d("`end` expected.")
+			end
+			Ob.Condition = Pb
+			Ob.Body = Qb
+			Ob.Tokens = Jb
+			Ib = Ob
+		elseif c:ConsumeKeyword("do", Jb) then
+			local b, Rb = g(Hb)
 			if not b then
 				return false, Rb
 			end
-			if not c:ConsumeKeyword("do", Lb) then
-				return false, d("`do` expected.")
-			end
-			local b, Sb = i(Jb)
-			if not b then
-				return false, Sb
-			end
-			if not c:ConsumeKeyword("end", Lb) then
+			if not c:ConsumeKeyword("end", Jb) then
 				return false, d("`end` expected.")
 			end
-			Qb.Condition = Rb
-			Qb.Body = Sb
-			Qb.Tokens = Lb
-			Kb = Qb
-		elseif c:ConsumeKeyword("do", Lb) then
-			local b, Tb = i(Jb)
-			if not b then
-				return false, Tb
-			end
-			if not c:ConsumeKeyword("end", Lb) then
-				return false, d("`end` expected.")
-			end
-			local Ub = {}
-			Ub.AstType = "DoStatement"
-			Ub.Body = Tb
-			Ub.Tokens = Lb
-			Kb = Ub
-		elseif c:ConsumeKeyword("for", Lb) then
+			local Sb = {}
+			Sb.AstType = "DoStatement"
+			Sb.Body = Rb
+			Sb.Tokens = Jb
+			Ib = Sb
+		elseif c:ConsumeKeyword("for", Jb) then
 			if not c:Is("Ident") then
 				return false, d("<ident> expected.")
 			end
-			local Vb = c:Get(Lb)
-			if c:ConsumeSymbol("=", Lb) then
-				local Wb = g(Jb)
-				local Xb = Wb:CreateLocal(Vb.Data)
-				local b, Yb = h(Jb)
+			local Tb = c:Get(Jb)
+			if c:ConsumeSymbol("=", Jb) then
+				local Ub = e(Hb)
+				local Vb = Ub:CreateLocal(Tb.Data)
+				local b, Wb = f(Hb)
 				if not b then
-					return false, Yb
+					return false, Wb
 				end
-				if not c:ConsumeSymbol(",", Lb) then
+				if not c:ConsumeSymbol(",", Jb) then
 					return false, d("`,` Expected")
 				end
-				local b, Zb = h(Jb)
+				local b, Xb = f(Hb)
+				if not b then
+					return false, Xb
+				end
+				local b, Yb
+				if c:ConsumeSymbol(",", Jb) then
+					b, Yb = f(Hb)
+					if not b then
+						return false, Yb
+					end
+				end
+				if not c:ConsumeKeyword("do", Jb) then
+					return false, d("`do` expected")
+				end
+				local b, Zb = g(Ub)
 				if not b then
 					return false, Zb
 				end
-				local b, ac
-				if c:ConsumeSymbol(",", Lb) then
-					b, ac = h(Jb)
-					if not b then
-						return false, ac
-					end
-				end
-				if not c:ConsumeKeyword("do", Lb) then
-					return false, d("`do` expected")
-				end
-				local b, bc = i(Wb)
-				if not b then
-					return false, bc
-				end
-				if not c:ConsumeKeyword("end", Lb) then
+				if not c:ConsumeKeyword("end", Jb) then
 					return false, d("`end` expected")
 				end
-				local cc = {}
-				cc.AstType = "NumericForStatement"
-				cc.Scope = Wb
-				cc.Variable = Xb
-				cc.Start = Yb
-				cc.End = Zb
-				cc.Step = ac
-				cc.Body = bc
-				cc.Tokens = Lb
-				Kb = cc
+				local ac = {}
+				ac.AstType = "NumericForStatement"
+				ac.Scope = Ub
+				ac.Variable = Vb
+				ac.Start = Wb
+				ac.End = Xb
+				ac.Step = Yb
+				ac.Body = Zb
+				ac.Tokens = Jb
+				Ib = ac
 			else
-				local dc = g(Jb)
-				local ec = {dc:CreateLocal(Vb.Data)}
-				while c:ConsumeSymbol(",", Lb) do
+				local bc = e(Hb)
+				local cc = {bc:CreateLocal(Tb.Data)}
+				while c:ConsumeSymbol(",", Jb) do
 					if not c:Is("Ident") then
 						return false, d("for variable expected.")
 					end
-					ec[#ec + 1] = dc:CreateLocal(c:Get(Lb).Data)
+					cc[#cc + 1] = bc:CreateLocal(c:Get(Jb).Data)
 				end
-				if not c:ConsumeKeyword("in", Lb) then
+				if not c:ConsumeKeyword("in", Jb) then
 					return false, d("`in` expected.")
 				end
-				local fc = {}
-				local b, gc = h(Jb)
+				local dc = {}
+				local b, ec = f(Hb)
 				if not b then
-					return false, gc
+					return false, ec
 				end
-				fc[#fc + 1] = gc
-				while c:ConsumeSymbol(",", Lb) do
-					local b, jc = h(Jb)
+				dc[#dc + 1] = ec
+				while c:ConsumeSymbol(",", Jb) do
+					local b, hc = f(Hb)
 					if not b then
-						return false, jc
+						return false, hc
 					end
-					fc[#fc + 1] = jc
+					dc[#dc + 1] = hc
 				end
-				if not c:ConsumeKeyword("do", Lb) then
+				if not c:ConsumeKeyword("do", Jb) then
 					return false, d("`do` expected.")
 				end
-				local b, hc = i(dc)
+				local b, fc = g(bc)
 				if not b then
-					return false, hc
+					return false, fc
 				end
-				if not c:ConsumeKeyword("end", Lb) then
+				if not c:ConsumeKeyword("end", Jb) then
 					return false, d("`end` expected.")
 				end
-				local ic = {}
-				ic.AstType = "GenericForStatement"
-				ic.Scope = dc
-				ic.VariableList = ec
-				ic.Generators = fc
-				ic.Body = hc
-				ic.Tokens = Lb
-				Kb = ic
+				local gc = {}
+				gc.AstType = "GenericForStatement"
+				gc.Scope = bc
+				gc.VariableList = cc
+				gc.Generators = dc
+				gc.Body = fc
+				gc.Tokens = Jb
+				Ib = gc
 			end
-		elseif c:ConsumeKeyword("repeat", Lb) then
-			local b, kc = i(Jb)
+		elseif c:ConsumeKeyword("repeat", Jb) then
+			local b, ic = g(Hb)
 			if not b then
-				return false, kc
+				return false, ic
 			end
-			if not c:ConsumeKeyword("until", Lb) then
+			if not c:ConsumeKeyword("until", Jb) then
 				return false, d("`until` expected.")
 			end
-			local b, lc = h(kc.Scope)
+			local b, jc = f(ic.Scope)
 			if not b then
-				return false, lc
+				return false, jc
 			end
-			local mc = {}
-			mc.AstType = "RepeatStatement"
-			mc.Condition = lc
-			mc.Body = kc
-			mc.Tokens = Lb
-			Kb = mc
-		elseif c:ConsumeKeyword("function", Lb) then
+			local kc = {}
+			kc.AstType = "RepeatStatement"
+			kc.Condition = jc
+			kc.Body = ic
+			kc.Tokens = Jb
+			Ib = kc
+		elseif c:ConsumeKeyword("function", Jb) then
 			if not c:Is("Ident") then
 				return false, d("Function name expected")
 			end
-			local b, nc = m(Jb, true)
+			local b, lc = k(Hb, true)
 			if not b then
-				return false, nc
+				return false, lc
 			end
-			local b, oc = n(Jb, Lb)
+			local b, mc = l(Hb, Jb)
 			if not b then
-				return false, oc
+				return false, mc
 			end
-			oc.IsLocal = false
-			oc.Name = nc
-			Kb = oc
-		elseif c:ConsumeKeyword("local", Lb) then
+			mc.IsLocal = false
+			mc.Name = lc
+			Ib = mc
+		elseif c:ConsumeKeyword("local", Jb) then
 			if c:Is("Ident") then
-				local pc = {c:Get(Lb).Data}
-				while c:ConsumeSymbol(",", Lb) do
+				local nc = {c:Get(Jb).Data}
+				while c:ConsumeSymbol(",", Jb) do
 					if not c:Is("Ident") then
 						return false, d("local var name expected")
 					end
-					pc[#pc + 1] = c:Get(Lb).Data
+					nc[#nc + 1] = c:Get(Jb).Data
 				end
-				local qc = {}
-				if c:ConsumeSymbol("=", Lb) then
+				local oc = {}
+				if c:ConsumeSymbol("=", Jb) then
 					repeat
-						local b, sc = h(Jb)
+						local b, qc = f(Hb)
 						if not b then
-							return false, sc
+							return false, qc
 						end
-						qc[#qc + 1] = sc
-					until not c:ConsumeSymbol(",", Lb)
+						oc[#oc + 1] = qc
+					until not c:ConsumeSymbol(",", Jb)
 				end
-				for tc, uc in ipairs(pc) do
-					pc[tc] = Jb:CreateLocal(uc)
+				for rc, sc in ipairs(nc) do
+					nc[rc] = Hb:CreateLocal(sc)
 				end
-				local rc = {}
-				rc.AstType = "LocalStatement"
-				rc.LocalList = pc
-				rc.InitList = qc
-				rc.Tokens = Lb
-				Kb = rc
-			elseif c:ConsumeKeyword("function", Lb) then
+				local pc = {}
+				pc.AstType = "LocalStatement"
+				pc.LocalList = nc
+				pc.InitList = oc
+				pc.Tokens = Jb
+				Ib = pc
+			elseif c:ConsumeKeyword("function", Jb) then
 				if not c:Is("Ident") then
 					return false, d("Function name expected")
 				end
-				local vc = c:Get(Lb).Data
-				local wc = Jb:CreateLocal(vc)
-				local b, xc = n(Jb, Lb)
+				local tc = c:Get(Jb).Data
+				local uc = Hb:CreateLocal(tc)
+				local b, vc = l(Hb, Jb)
 				if not b then
-					return false, xc
+					return false, vc
 				end
-				xc.Name = wc
-				xc.IsLocal = true
-				Kb = xc
+				vc.Name = uc
+				vc.IsLocal = true
+				Ib = vc
 			else
 				return false, d("local var or function def expected")
 			end
-		elseif c:ConsumeSymbol("::", Lb) then
+		elseif c:ConsumeSymbol("::", Jb) then
 			if not c:Is("Ident") then
 				return false, d("Label name expected")
 			end
-			local yc = c:Get(Lb).Data
-			if not c:ConsumeSymbol("::", Lb) then
+			local wc = c:Get(Jb).Data
+			if not c:ConsumeSymbol("::", Jb) then
 				return false, d("`::` expected")
 			end
-			local zc = {}
-			zc.AstType = "LabelStatement"
-			zc.Label = yc
-			zc.Tokens = Lb
-			Kb = zc
-		elseif c:ConsumeKeyword("return", Lb) then
-			local Ac = {}
+			local xc = {}
+			xc.AstType = "LabelStatement"
+			xc.Label = wc
+			xc.Tokens = Jb
+			Ib = xc
+		elseif c:ConsumeKeyword("return", Jb) then
+			local yc = {}
 			if not c:IsKeyword("end") then
-				local b, Cc = h(Jb)
+				local b, Ac = f(Hb)
 				if b then
-					Ac[1] = Cc
-					while c:ConsumeSymbol(",", Lb) do
-						local b, Dc = h(Jb)
+					yc[1] = Ac
+					while c:ConsumeSymbol(",", Jb) do
+						local b, Bc = f(Hb)
 						if not b then
-							return false, Dc
+							return false, Bc
 						end
-						Ac[#Ac + 1] = Dc
+						yc[#yc + 1] = Bc
 					end
 				end
 			end
-			local Bc = {}
-			Bc.AstType = "ReturnStatement"
-			Bc.Arguments = Ac
-			Bc.Tokens = Lb
-			Kb = Bc
-		elseif c:ConsumeKeyword("break", Lb) then
-			local Ec = {}
-			Ec.AstType = "BreakStatement"
-			Ec.Tokens = Lb
-			Kb = Ec
-		elseif c:ConsumeKeyword("continue", Lb) then
-			local Fc = {}
-			Fc.AstType = "ContinueStatement"
-			Fc.Tokens = Lb
-			Kb = Fc
+			local zc = {}
+			zc.AstType = "ReturnStatement"
+			zc.Arguments = yc
+			zc.Tokens = Jb
+			Ib = zc
+		elseif c:ConsumeKeyword("break", Jb) then
+			local Cc = {}
+			Cc.AstType = "BreakStatement"
+			Cc.Tokens = Jb
+			Ib = Cc
+		elseif c:ConsumeKeyword("continue", Jb) then
+			local Dc = {}
+			Dc.AstType = "ContinueStatement"
+			Dc.Tokens = Jb
+			Ib = Dc
 		else
-			local b, Gc = m(Jb)
+			local b, Ec = k(Hb)
 			if not b then
-				return false, Gc
+				return false, Ec
 			end
-			if c:IsSymbol(",") or c:IsSymbol("=") or (c:Peek(1).Data == "=" and operatorsLuau[c:Peek().Data]) then
-				if (Gc.ParenCount or 0) > 0 then
+			if c:IsSymbol(",") or c:IsSymbol("=") or (c:Peek(1).Data == "=" and OperatorsU[c:Peek().Data]) then
+				if (Ec.ParenCount or 0) > 0 then
 					return false, d("can not assign to parenthesized expression, is not an lvalue")
 				end
-				local Hc = {Gc}
-				while c:ConsumeSymbol(",", Lb) do
-					local b, Lc = m(Jb)
+				local Fc = {Ec}
+				while c:ConsumeSymbol(",", Jb) do
+					local b, Jc = k(Hb)
+					if not b then
+						return false, Jc
+					end
+					Fc[#Fc + 1] = Jc
+				end
+				local Gc = {}
+				if OperatorsU[c:Peek().Data] then
+					for Kc in pairs(OperatorsU) do
+						if c:IsSymbol(Kc) then
+							c:ConsumeSymbol(Kc, Jb)
+							Gc.LuaUAssign = " " .. Kc .. "= "
+							break
+						end
+					end
+				end
+				if not c:ConsumeSymbol("=", Jb) then
+					return false, d("`=` Expected.")
+				end
+				local Hc = {}
+				local b, Ic = f(Hb)
+				if not b then
+					return false, Ic
+				end
+				Hc[1] = Ic
+				while c:ConsumeSymbol(",", Jb) do
+					local b, Lc = f(Hb)
 					if not b then
 						return false, Lc
 					end
 					Hc[#Hc + 1] = Lc
 				end
-				local Kc = {}
-				if operatorsLuau[c:Peek().Data] then
-					for Op in pairs(operatorsLuau) do
-						if c:IsSymbol(Op) then
-							c:ConsumeSymbol(Op, Lb)
-							Kc.LuaUAssign = " " .. Op .. "= "
-							break
-						end
-					end
-				end
-				if not c:ConsumeSymbol("=", Lb) then
-					return false, d("`=` Expected.")
-				end
-				local Ic = {}
-				local b, Jc = h(Jb)
-				if not b then
-					return false, Jc
-				end
-				Ic[1] = Jc
-				while c:ConsumeSymbol(",", Lb) do
-					local b, Mc = h(Jb)
-					if not b then
-						return false, Mc
-					end
-					Ic[#Ic + 1] = Mc
-				end
-				Kc.AstType = "AssignmentStatement"
-				Kc.Lhs = Hc
-				Kc.Rhs = Ic
-				Kc.Tokens = Lb
-				Kb = Kc
-			elseif Gc.AstType == "CallExpr" or Gc.AstType == "TableCallExpr" or Gc.AstType == "StringCallExpr" then
-				local Nc = {}
-				Nc.AstType = "CallStatement"
-				Nc.Expression = Gc
-				Nc.Tokens = Lb
-				Kb = Nc
+				Gc.AstType = "AssignmentStatement"
+				Gc.Lhs = Fc
+				Gc.Rhs = Hc
+				Gc.Tokens = Jb
+				Ib = Gc
+			elseif Ec.AstType == "CallExpr" or Ec.AstType == "TableCallExpr" or Ec.AstType == "StringCallExpr" then
+				local Mc = {}
+				Mc.AstType = "CallStatement"
+				Mc.Expression = Ec
+				Mc.Tokens = Jb
+				Ib = Mc
 			else
 				return false, d("Assignment Statement Expected")
 			end
 		end
 		if c:IsSymbol(";") then
-			Kb.Semicolon = c:Get(Kb.Tokens)
+			Ib.Semicolon = c:Get(Ib.Tokens)
 		end
-		return true, Kb
+		return true, Ib
 	end
-	local s = toDictionary("end", "else", "elseif", "until")
-	i = function(Oc)
-		local Pc = {}
-		Pc.Scope = g(Oc)
-		Pc.AstType = "Statlist"
-		Pc.Body = {}
-		Pc.Tokens = {}
-		while not s[c:Peek().Data] and not c:IsEof() do
-			local b, Qc = r(Pc.Scope)
+	local q = {
+		["end"] = true,
+		["else"] = true,
+		["elseif"] = true,
+		["until"] = true
+	}
+	g = function(Nc)
+		local Oc = {}
+		Oc.Scope = e(Nc)
+		Oc.AstType = "Statlist"
+		Oc.Body = {}
+		Oc.Tokens = {}
+		while not q[c:Peek().Data] and not c:IsEof() do
+			local b, Pc = p(Oc.Scope)
 			if not b then
-				return false, Qc
+				return false, Pc
 			end
-			Pc.Body[#Pc.Body + 1] = Qc
+			Oc.Body[#Oc.Body + 1] = Pc
 		end
 		if c:IsEof() then
-			local Rc = {}
-			Rc.AstType = "Eof"
-			Rc.Tokens = {c:Get()}
-			Pc.Body[#Pc.Body + 1] = Rc
+			local Qc = {}
+			Qc.AstType = "Eof"
+			Qc.Tokens = {c:Get()}
+			Oc.Body[#Oc.Body + 1] = Qc
 		end
-		return true, Pc
+		return true, Oc
 	end
-	local function t()
-		local Sc = g()
-		return i(Sc)
+	local function r()
+		local Rc = e()
+		return g(Rc)
 	end
-	local b, u = t()
-	return b, u
+	local b, s = r()
+	return b, s
 end
-local Legends = {
-	["\\"] = "\\\\",
-	["\a"] = "\\a",
-	["\b"] = "\\b",
-	["\f"] = "\\f",
-	["\n"] = "\\n",
-	["\r"] = "\\r",
-	["\t"] = "\\t",
-	["\v"] = "\\v",
-	["\""] = "\\\""
-}
-local function fixnum(a, b)
-	a = tostring(tonumber(a))
-	if a:sub(1, 2) == "0." then
-		a = a:sub(2)
-	elseif a:match("%d+") == a then
-		if b then
-			a = tonumber(a)
-			a = a <= 1 and a or ("0x%x"):format(a)
-		else
-			local c = a:match("000+$")
-			a = c and (a:sub(1, #a - #c) .. "e" .. #c) or a
-		end
-	end
-	return a
-end
-local function fixstr(a)
+local function ParseString(a)
 	return "\"" .. (loadstring("return " .. a)():gsub(".", function(b)
 		return "\\" .. b:byte()
 	end)) .. "\""
 end
 local lastType = false
-local function formatSource(a, b, c, d, e, f)
+local function GenerateSource(a, b, c, d, e, f)
 	lastType = false
-	localCount = 0
+	Locals = 0
 	local l, n, j, i = 0, "\n", false, false
 	local function k(p, o, q)
 		q = q or ""
 		local s, r = p:sub(-1, -1), o:sub(1, 1)
-		if lettersU[s] or lettersL[s] or s == "_" then
-			if not (lettersU[r] or lettersL[r] or r == "_" or numbers[r]) then
+		if UpperLetters[s] or LowerLetters[s] or s == "_" then
+			if not (UpperLetters[r] or LowerLetters[r] or r == "_" or Numbers[r]) then
 				return p .. o
 			elseif r == "(" then
 				return p .. q .. o
 			else
 				return p .. q .. o
 			end
-		elseif numbers[s] then
+		elseif Numbers[s] then
 			if r == "(" then
 				return p .. o
 			else
@@ -1559,9 +1546,21 @@ local function formatSource(a, b, c, d, e, f)
 				v = v .. u.Name
 			end
 		elseif u.AstType == "NumberExpr" then
-			v = v .. fixnum(u.Value.Data, d)
+			local NUMBER = tostring(tonumber(u.Value.Data))
+			if NUMBER:sub(1, 2) == "0." then
+				NUMBER = NUMBER:sub(2)
+			elseif NUMBER:match("%d+") == NUMBER then
+				if d then
+					NUMBER = tonumber(NUMBER)
+					NUMBER = NUMBER <= 1 and NUMBER or ("0x%x"):format(NUMBER)
+				else
+					local c = NUMBER:match("000+$")
+					NUMBER = c and (NUMBER:sub(1, #NUMBER - #c) .. "e" .. #c) or NUMBER
+				end
+			end
+			v = v .. NUMBER
 		elseif u.AstType == "StringExpr" then
-			v = v .. fixstr(u.Value.Data)
+			v = v .. ParseString(u.Value.Data)
 		elseif u.AstType == "BooleanExpr" then
 			v = v .. tostring(u.Value)
 		elseif u.AstType == "NilExpr" then
@@ -1615,10 +1614,10 @@ local function formatSource(a, b, c, d, e, f)
 			end
 		elseif u.AstType == "StringCallExpr" then
 			if c and f ~= "js" then
-				v = v .. m(u.Base) .. fixstr(u.Arguments[1].Data)
+				v = v .. m(u.Base) .. ParseString(u.Arguments[1].Data)
 			else
 				v = v .. m(u.Base) .. "("
-				v = v .. fixstr(u.Arguments[1].Data) .. ")"
+				v = v .. ParseString(u.Arguments[1].Data) .. ")"
 			end
 		elseif u.AstType == "IndexExpr" then
 			v = v .. m(u.Base) .. "[" .. m(u.Index) .. "]"
@@ -2004,30 +2003,40 @@ local function formatSource(a, b, c, d, e, f)
 	end
 	return j(a):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n"):gsub("for _[, _]+ in", "for _ in"):match("^%s*(.-)%s*$")
 end
-local function decode(a)
+local function DecryptString(a)
 	return (a:gsub("\"[\\%d]+\"", function(b)
 		return "\"" .. loadstring("return " .. b)():gsub("[%z%c\"\\]", function(c)
-			return Legends[c] or "\\" .. c:byte()
+			return ({
+				["\\"] = "\\\\",
+				["\a"] = "\\a",
+				["\b"] = "\\b",
+				["\f"] = "\\f",
+				["\n"] = "\\n",
+				["\r"] = "\\r",
+				["\t"] = "\\t",
+				["\v"] = "\\v",
+				["\""] = "\\\""
+			})[c] or "\\" .. c:byte()
 		end) .. "\""
 	end))
 end
 local function _beautify(a, b, c)
-	local d, e = ParseLua(a)
+	local d, e = Parse(a)
 	if not d then
 		return a, e
 	end
-	local f = formatSource(e, c, false, b, false)
+	local f = GenerateSource(e, c, false, b, false)
 	if not b then
-		f = decode(f)
+		f = DecryptString(f)
 	end
 	return f
 end
 local function _minify(a, b)
-	local c, d = ParseLua(a)
+	local c, d = Parse(a)
 	if not c then
 		return a, d
 	end
-	local e = formatSource(d, true, true, b, false)
+	local e = GenerateSource(d, true, true, b, false)
 	for _ = 1, 2 do
 		e = e:gsub("%s+", " "):gsub("([%w_]) (%p)", function(f, g)
 			if g ~= "_" then
@@ -2044,16 +2053,16 @@ local function _minify(a, b)
 		end)
 	end
 	if not b then
-		e = decode(e)
+		e = DecryptString(e)
 	end
 	return e
 end
 local function _uglify(a, b, c)
-	local f, d = ParseLua(a)
+	local f, d = Parse(a)
 	if not f then
 		return a, d
 	end
-	local e = formatSource(d, true, true, b, true)
+	local e = GenerateSource(d, true, true, b, true)
 	if not c then
 		for _ = 1, 2 do
 			e = e:gsub("%s+", " "):gsub("([%w_]) (%p)", function(h, i)
@@ -2072,16 +2081,16 @@ local function _uglify(a, b, c)
 		end
 	end
 	if not b then
-		e = decode(e)
+		e = DecryptString(e)
 	end
 	return e
 end
 local function _tojavascript(a, b)
-	local c, d = ParseLua(a)
+	local c, d = Parse(a)
 	if not c then
 		return a, d
 	end
-	local e = formatSource(d, false, false, b, false, "js")
+	local e = GenerateSource(d, false, false, b, false, "js")
 	if b then
 		e = e:gsub("\"[\\%d]+\"", function(f)
 			return "\"" .. loadstring("return " .. f)():gsub(".", function(g)
@@ -2089,7 +2098,7 @@ local function _tojavascript(a, b)
 			end) .. "\""
 		end)
 	else
-		e = decode(e)
+		e = DecryptString(e)
 	end
 	return e
 end
