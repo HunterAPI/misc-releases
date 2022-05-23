@@ -39,21 +39,21 @@ local GenerateLocal = (function()
 		end
 		return h
 	end
-	return function(tab)
-		local j = ""
+	return function(j)
+		local k = ""
 		repeat
-			local k = Locals
+			local l = Locals
 			Locals = Locals + 1
-			j = c(k)
-		until not Keywords[j] or (function()
-			for _, v in next, tab do
-				if j == v.Name then
+			k = c(l)
+		until not Keywords[k] or (function()
+			for _, m in next, j do
+				if k == m.Name then
 					return false
 				end
 			end
 			return true
 		end)()
-		return j
+		return k
 	end
 end)()
 local Scope = {
@@ -735,8 +735,6 @@ local function Parse(a)
 		end
 		return u
 	end
-	local _ = 0
-	local _ = {"_", "a", "b", "c", "d"}
 	local function e(z)
 		local A = Scope:new(z)
 		A.RenameVars = A.ObfuscateLocals
@@ -1546,19 +1544,19 @@ local function GenerateSource(a, b, c, d, e, f)
 				v = v .. u.Name
 			end
 		elseif u.AstType == "NumberExpr" then
-			local NUMBER = tostring(tonumber(u.Value.Data))
-			if NUMBER:sub(1, 2) == "0." then
-				NUMBER = NUMBER:sub(2)
-			elseif NUMBER:match("%d+") == NUMBER then
+			local w = tostring(tonumber(u.Value.Data))
+			if w:sub(1, 2) == "0." then
+				w = w:sub(2)
+			elseif w:match("%d+") == w then
 				if d then
-					NUMBER = tonumber(NUMBER)
-					NUMBER = NUMBER <= 1 and NUMBER or ("0x%x"):format(NUMBER)
+					w = tonumber(w)
+					w = w <= 1 and w or ("0x%x"):format(w)
 				else
-					local c = NUMBER:match("000+$")
-					NUMBER = c and (NUMBER:sub(1, #NUMBER - #c) .. "e" .. #c) or NUMBER
+					local c = w:match("000+$")
+					w = c and (w:sub(1, #w - #c) .. "e" .. #c) or w
 				end
 			end
-			v = v .. NUMBER
+			v = v .. w
 		elseif u.AstType == "StringExpr" then
 			v = v .. ParseString(u.Value.Data)
 		elseif u.AstType == "BooleanExpr" then
@@ -1597,8 +1595,8 @@ local function GenerateSource(a, b, c, d, e, f)
 				v = v .. m(u.Arguments[1])
 			else
 				v = v .. "("
-				for x, w in next, u.Arguments do
-					v = v .. m(w)
+				for x, y in next, u.Arguments do
+					v = v .. m(y)
 					if x ~= #u.Arguments then
 						v = v .. ", "
 					end
@@ -1633,8 +1631,8 @@ local function GenerateSource(a, b, c, d, e, f)
 						break
 					end
 				end
-				for z, y in next, u.Arguments do
-					v = v .. y.Name
+				for z, A in next, u.Arguments do
+					v = v .. A.Name
 					if z ~= #u.Arguments then
 						v = v .. ", "
 					elseif u.VarArg then
@@ -1662,25 +1660,25 @@ local function GenerateSource(a, b, c, d, e, f)
 			l = l - 1
 			v = k(v, ("\t"):rep(l) .. (f == "js" and "}" or "end"))
 		elseif u.AstType == "ConstructorExpr" then
-			local C = (function()
-				for _, E in next, u.EntryList do
-					if E.Type == "Key" or E.Type == "KeyString" then
+			local E = (function()
+				for _, F in next, u.EntryList do
+					if F.Type == "Key" or F.Type == "KeyString" then
 						return false
 					end
 				end
 				return true
 			end)()
-			if f == "js" and C then
+			if f == "js" and E then
 				v = v .. "["
 			else
 				v = v .. "{"
 			end
-			local A, B, D = false, false, false
+			local C, B, D = false, false, false
 			for H, G in next, u.EntryList do
-				A, B = G.Type == "Key" or G.Type == "KeyString", A
-				l = l + (C and 0 or 1)
-				if A or D then
-					D = A
+				C, B = G.Type == "Key" or G.Type == "KeyString", C
+				l = l + (E and 0 or 1)
+				if C or D then
+					D = C
 					if not B then
 						v = v .. "\n"
 					end
@@ -1695,19 +1693,19 @@ local function GenerateSource(a, b, c, d, e, f)
 				end
 				if H ~= #u.EntryList then
 					v = v .. ","
-					if not A then
+					if not C then
 						v = v .. " "
 					end
 				end
-				if A then
+				if C then
 					v = v .. "\n"
 				end
-				l = l - (C and 0 or 1)
+				l = l - (E and 0 or 1)
 			end
-			if #u.EntryList > 0 and A then
+			if #u.EntryList > 0 and C then
 				v = v .. ("\t"):rep(l)
 			end
-			if f == "js" and C then
+			if f == "js" and E then
 				v = v .. "]"
 			else
 				v = v .. "}"
@@ -1996,8 +1994,8 @@ local function GenerateSource(a, b, c, d, e, f)
 	function j(mb)
 		local nb = ""
 		h(mb, e)
-		for _, pb in next, mb.Body do
-			nb = k(nb, i(pb) .. n)
+		for _, ob in next, mb.Body do
+			nb = k(nb, i(ob) .. n)
 		end
 		return nb
 	end
@@ -2016,7 +2014,7 @@ local function DecryptString(a)
 				["\t"] = "\\t",
 				["\v"] = "\\v",
 				["\""] = "\\\""
-			})[c] or "\\" .. c:byte()
+			})[c] or ("\\" .. c:byte())
 		end) .. "\""
 	end))
 end
