@@ -1,6 +1,6 @@
 local function Dictionary(...)
 	local t = {}
-	for _, v in ipairs({...}) do
+	for _, v in next, {...} do
 		t[v] = true
 	end
 	return t
@@ -46,7 +46,7 @@ local GenerateLocal = (function()
 			Locals = Locals + 1
 			j = c(k)
 		until not Keywords[j] or (function()
-			for _, v in ipairs(tab) do
+			for _, v in next, tab do
 				if j == v.Name then
 					return false
 				end
@@ -94,7 +94,7 @@ local Scope = {
 		return j
 	end,
 	GetLocal = function(k, l)
-		for _, m in ipairs(k.Locals) do
+		for _, m in next, k.Locals do
 			if m.Name == l then
 				return m
 			end
@@ -160,7 +160,7 @@ local Scope = {
 	end,
 	GetAllVariables = function(M)
 		local N = M:GetVars(true)
-		for _, O in ipairs(M:GetVars(false)) do
+		for _, O in next, M:GetVars(false) do
 			N[#N + 1] = O
 		end
 		return N
@@ -168,20 +168,20 @@ local Scope = {
 	GetVars = function(P, Q)
 		local R = {}
 		if Q then
-			for _, S in ipairs(P.Children) do
-				for _, T in ipairs(S:GetVars(true)) do
+			for _, S in next, P.Children do
+				for _, T in next, S:GetVars(true) do
 					R[#R + 1] = T
 				end
 			end
 		else
-			for _, U in ipairs(P.Locals) do
+			for _, U in next, P.Locals do
 				R[#R + 1] = U
 			end
-			for _, V in ipairs(P.Globals) do
+			for _, V in next, P.Globals do
 				R[#R + 1] = V
 			end
 			if P.Parent then
-				for _, W in ipairs(P.Parent:GetVars(false)) do
+				for _, W in next, P.Parent:GetVars(false) do
 					R[#R + 1] = W
 				end
 			end
@@ -204,7 +204,7 @@ local Scope = {
 		return Z
 	end,
 	GetGlobal = function(ab, bb)
-		for _, cb in ipairs(ab.Globals) do
+		for _, cb in next, ab.Globals do
 			if cb.Name == bb then
 				return cb
 			end
@@ -217,7 +217,7 @@ local Scope = {
 		return db:GetLocal(eb) or db:GetGlobal(eb)
 	end,
 	RenameSingles = function(fb)
-		for _, gb in ipairs(fb.Locals) do
+		for _, gb in next, fb.Locals do
 			if gb.References <= 1 then
 				fb:RenameLocal(gb.Name, "_")
 			end
@@ -226,7 +226,7 @@ local Scope = {
 	ObfuscateLocals = function(hb, ib, jb)
 		ib = ib or 7
 		local kb = jb or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm1234567890"
-		for _, lb in ipairs(hb.Locals) do
+		for _, lb in next, hb.Locals do
 			if lb.References <= 1 then
 				hb:RenameLocal(lb.Name, "_")
 			else
@@ -249,7 +249,7 @@ local Scope = {
 		end
 	end,
 	MinifyVariables = function(qb)
-		for _, rb in ipairs(qb.Locals) do
+		for _, rb in next, qb.Locals do
 			qb:RenameLocal(rb.Name, (rb.References <= 1 and "_") or GenerateLocal(qb.Locals))
 		end
 	end
@@ -1316,7 +1316,7 @@ local function Parse(a)
 						oc[#oc + 1] = qc
 					until not c:ConsumeSymbol(",", Jb)
 				end
-				for rc, sc in ipairs(nc) do
+				for rc, sc in next, nc do
 					nc[rc] = Hb:CreateLocal(sc)
 				end
 				local pc = {}
@@ -1403,7 +1403,7 @@ local function Parse(a)
 				end
 				local Gc = {}
 				if OperatorsU[c:Peek().Data] then
-					for Kc in pairs(OperatorsU) do
+					for Kc in next, OperatorsU do
 						if c:IsSymbol(Kc) then
 							c:ConsumeSymbol(Kc, Jb)
 							Gc.LuaUAssign = " " .. Kc .. "= "
@@ -1597,7 +1597,7 @@ local function GenerateSource(a, b, c, d, e, f)
 				v = v .. m(u.Arguments[1])
 			else
 				v = v .. "("
-				for x, w in ipairs(u.Arguments) do
+				for x, w in next, u.Arguments do
 					v = v .. m(w)
 					if x ~= #u.Arguments then
 						v = v .. ", "
@@ -1633,7 +1633,7 @@ local function GenerateSource(a, b, c, d, e, f)
 						break
 					end
 				end
-				for z, y in ipairs(u.Arguments) do
+				for z, y in next, u.Arguments do
 					v = v .. y.Name
 					if z ~= #u.Arguments then
 						v = v .. ", "
@@ -1663,7 +1663,7 @@ local function GenerateSource(a, b, c, d, e, f)
 			v = k(v, ("\t"):rep(l) .. (f == "js" and "}" or "end"))
 		elseif u.AstType == "ConstructorExpr" then
 			local C = (function()
-				for _, E in ipairs(u.EntryList) do
+				for _, E in next, u.EntryList do
 					if E.Type == "Key" or E.Type == "KeyString" then
 						return false
 					end
@@ -1676,7 +1676,7 @@ local function GenerateSource(a, b, c, d, e, f)
 				v = v .. "{"
 			end
 			local A, B, D = false, false, false
-			for H, G in ipairs(u.EntryList) do
+			for H, G in next, u.EntryList do
 				A, B = G.Type == "Key" or G.Type == "KeyString", A
 				l = l + (C and 0 or 1)
 				if A or D then
@@ -1760,7 +1760,7 @@ local function GenerateSource(a, b, c, d, e, f)
 		local K = ""
 		if J.AstType == "AssignmentStatement" then
 			K = ("\t"):rep(l)
-			for M, L in ipairs(J.Lhs) do
+			for M, L in next, J.Lhs do
 				K = K .. m(L)
 				if M ~= #J.Lhs then
 					K = K .. ", "
@@ -1772,7 +1772,7 @@ local function GenerateSource(a, b, c, d, e, f)
 				else
 					K = K .. " = "
 				end
-				for O, N in ipairs(J.Rhs) do
+				for O, N in next, J.Rhs do
 					K = K .. m(N)
 					if O ~= #J.Rhs then
 						K = K .. ", "
@@ -1783,7 +1783,7 @@ local function GenerateSource(a, b, c, d, e, f)
 			K = ("\t"):rep(l) .. m(J.Expression)
 		elseif J.AstType == "LocalStatement" then
 			K = ("\t"):rep(l) .. K .. (f == "js" and "let " or "local ")
-			for Q, P in ipairs(J.LocalList) do
+			for Q, P in next, J.LocalList do
 				K = K .. P.Name
 				if Q ~= #J.LocalList then
 					K = K .. ", "
@@ -1791,7 +1791,7 @@ local function GenerateSource(a, b, c, d, e, f)
 			end
 			if #J.InitList > 0 then
 				K = K .. " = "
-				for S, R in ipairs(J.InitList) do
+				for S, R in next, J.InitList do
 					K = K .. m(R)
 					if S ~= #J.InitList then
 						K = K .. ", "
@@ -1804,7 +1804,7 @@ local function GenerateSource(a, b, c, d, e, f)
 			l = l + 1
 			K = k(K, j(J.Clauses[1].Body))
 			l = l - 1
-			for U, T in ipairs(J.Clauses) do
+			for U, T in next, J.Clauses do
 				if U >= 2 then
 					if T.Condition then
 						K = k(K, ("\t"):rep(l) .. (f == "js" and "} else if (" or "elseif "))
@@ -1837,7 +1837,7 @@ local function GenerateSource(a, b, c, d, e, f)
 			if #J.Arguments > 0 then
 				K = K .. " "
 			end
-			for W, V in ipairs(J.Arguments) do
+			for W, V in next, J.Arguments do
 				K = k(K, m(V))
 				if W ~= #J.Arguments then
 					K = K .. ", "
@@ -1872,7 +1872,7 @@ local function GenerateSource(a, b, c, d, e, f)
 			end
 			K = K .. "("
 			if #J.Arguments > 0 then
-				for Y, X in ipairs(J.Arguments) do
+				for Y, X in next, J.Arguments do
 					K = K .. X.Name
 					if Y ~= #J.Arguments then
 						K = K .. ", "
@@ -1899,11 +1899,11 @@ local function GenerateSource(a, b, c, d, e, f)
 		elseif J.AstType == "GenericForStatement" then
 			if f == "js" then
 				K = ("\t"):rep(l) .. "for (let "
-				for i, Z in ipairs(J.VariableList) do
+				for i, Z in next, J.VariableList do
 					J.VariableList[i] = Z.Name
 				end
 				K = K .. table.concat(J.VariableList, ", ") .. " of "
-				for ab, bb in ipairs(J.Generators) do
+				for ab, bb in next, J.Generators do
 					K = k(K, m(bb))
 					if ab ~= #J.Generators then
 						K = k(K, ", ")
@@ -1925,14 +1925,14 @@ local function GenerateSource(a, b, c, d, e, f)
 						end
 					end
 				end
-				for cb, db in ipairs(J.VariableList) do
+				for cb, db in next, J.VariableList do
 					K = K .. db.Name
 					if cb ~= #J.VariableList then
 						K = K .. ", "
 					end
 				end
 				K = K .. " in "
-				for eb, fb in ipairs(J.Generators) do
+				for eb, fb in next, J.Generators do
 					K = k(K, m(fb))
 					if eb ~= #J.Generators then
 						K = k(K, ", ")
@@ -1996,7 +1996,7 @@ local function GenerateSource(a, b, c, d, e, f)
 	function j(mb)
 		local nb = ""
 		h(mb, e)
-		for _, pb in pairs(mb.Body) do
+		for _, pb in next, mb.Body do
 			nb = k(nb, i(pb) .. n)
 		end
 		return nb
