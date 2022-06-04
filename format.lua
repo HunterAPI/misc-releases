@@ -233,16 +233,16 @@ local Scope = {
 				local mb = ""
 				local nb = 0
 				repeat
-					local ob = math.random(1, #kb)
+					local ob = math.random(#kb)
 					mb = mb .. kb:sub(ob, ob)
 					for _ = 1, math.random(0, nb > 5 and 30 or ib) do
-						local pb = math.random(1, #kb)
+						local pb = math.random(#kb)
 						mb = mb .. kb:sub(pb, pb)
 					end
 					nb = nb + 1
 				until not hb:GetVariable(mb)
 				mb = ("."):rep(math.random(20, 50)):gsub(".", function()
-					return ({"l", "I"})[math.random(1, 2)]
+					return ({"l", "I"})[math.random(2)]
 				end) .. "_" .. mb
 				hb:RenameLocal(lb.Name, mb)
 			end
@@ -1545,18 +1545,26 @@ local function GenerateSource(a, b, c, d, e, f)
 			end
 		elseif u.AstType == "NumberExpr" then
 			local w = tostring(tonumber(u.Value.Data))
-			if w:sub(1, 2) == "0." then
+			local n = w:sub(1, 1) == "-"
+			if n then
+				w = w:sub(2)
+			end
+			if w == "inf" then
+				w = "math.huge"
+			elseif w == "nan" then
+				w = "0 / 0"
+			elseif w:sub(1, 2) == "0." then
 				w = w:sub(2)
 			elseif w:match("%d+") == w then
-				if d then
-					w = tonumber(w)
-					w = w <= 1 and w or ("0x%x"):format(w)
+				local h = d and tonumber(w)
+				if h and h >= 1 then
+					w = ("0x%x"):format(h)
 				else
 					local c = w:match("000+$")
 					w = c and (w:sub(1, #w - #c) .. "e" .. #c) or w
 				end
 			end
-			v = v .. w
+			v = v .. (n and ("-" .. w) or w)
 		elseif u.AstType == "StringExpr" then
 			v = v .. ParseString(u.Value.Data)
 		elseif u.AstType == "BooleanExpr" then
