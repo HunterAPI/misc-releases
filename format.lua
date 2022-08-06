@@ -45,7 +45,7 @@ local GenerateLocal = (function()
 			local l = Locals
 			Locals = Locals + 1
 			k = c(l)
-		until not Keywords[k] or (function()
+		until not Keywords[k] and (function()
 			for _, m in next, j do
 				if k == m.Name then
 					return false
