@@ -2007,7 +2007,7 @@ local function GenerateSource(a, b, c, d, e, f)
 		end
 		return nb
 	end
-	return j(a):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n"):gsub("for _[, _]+ in", "for _ in"):match("^%s*(.-)%s*$")
+	return j(a):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n"):gsub("for _[, _]+ in", "for _ in"):gsub("function%(%)[\n\t]+end", "function() end"):match("^%s*(.-)%s*$")
 end
 local function DecryptString(a)
 	return (a:gsub("\"[\\%d]+\"", function(b)
